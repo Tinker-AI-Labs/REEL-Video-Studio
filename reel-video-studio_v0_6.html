@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reel — OpenRouter Video Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #09090d;
+    --card: rgba(255,255,255,0.035);
+    --card-strong: rgba(255,255,255,0.06);
+    --line: rgba(255,255,255,0.09);
+    --line-soft: rgba(255,255,255,0.06);
+    --ink: #f2f2f5;
+    --ink-dim: #9a97a3;
+    --ink-faint: #6b6875;
+    --acc1: #8b7cff;
+    --acc2: #4fd6c8;
+    --acc-grad: linear-gradient(120deg, #8b7cff, #4fd6c8);
+    --warn: #e8b34b;
+    --bad: #ef6a5a;
+    --good: #5fce8a;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --r-lg: 18px;
+    --r-md: 12px;
+    --r-sm: 9px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ---------- backdrop ---------- */
+  .aurora { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  .aurora::before, .aurora::after {
+    content: ''; position: absolute; border-radius: 50%; filter: blur(110px); opacity: .35;
+  }
+  .aurora::before {
+    width: 60vw; height: 60vw; top: -25vw; right: -15vw;
+    background: radial-gradient(circle, #6c5ce7 0%, transparent 65%);
+  }
+  .aurora::after {
+    width: 50vw; height: 50vw; bottom: -20vw; left: -12vw;
+    background: radial-gradient(circle, #12857a 0%, transparent 65%); opacity: .28;
+  }
+  .grid-lines {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .5;
+    background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 30%, transparent 75%);
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 0 24px 90px; }
+
+  /* ---------- topbar ---------- */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 18px 0; position: sticky; top: 0; z-index: 50;
+    background: linear-gradient(180deg, rgba(9,9,13,.92) 70%, transparent);
+    backdrop-filter: blur(8px);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .12em; font-size: 14px; }
+  .brand-dot {
+    width: 26px; height: 26px; border-radius: 8px; background: var(--acc-grad);
+    display: grid; place-items: center; box-shadow: 0 0 22px rgba(139,124,255,.45);
+  }
+  .brand-dot svg { width: 14px; height: 14px; }
+  .key-wrap { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; max-width: 460px; }
+  .key-wrap input {
+    flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 99px;
+    color: var(--ink); font-family: var(--mono); font-size: 12.5px; padding: 9px 16px; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .key-wrap input:focus { border-color: var(--acc1); box-shadow: 0 0 0 3px rgba(139,124,255,.18); }
+  .key-tag { font-size: 11px; color: var(--ink-faint); white-space: nowrap; display: none; }
+  @media (min-width: 720px) { .key-tag { display: block; } }
+
+  /* ---------- hero ---------- */
+  header { padding: 56px 0 36px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px;
+    color: var(--acc2); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 16px;
+    padding: 5px 12px; border: 1px solid rgba(79,214,200,.25); border-radius: 99px; background: rgba(79,214,200,.06);
+  }
+  .eyebrow::before { content:''; width: 6px; height: 6px; border-radius: 50%; background: var(--acc2); box-shadow: 0 0 8px var(--acc2); }
+  h1 {
+    font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -.03em; line-height: 1.08; max-width: 18ch;
+    background: linear-gradient(180deg, #fff 40%, #b9b6c9); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--ink-dim); font-size: 15px; max-width: 60ch; margin-top: 14px; }
+  header p b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- layout ---------- */
+  .studio { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .studio { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg);
+    padding: 22px; backdrop-filter: blur(14px);
+    box-shadow: 0 20px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .card-title { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card-title::after { content:''; flex: 1; height: 1px; background: var(--line-soft); }
+
+  .left-col { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 20px; }
+  @media (max-width: 900px) { .left-col { position: static; } }
+
+  /* ---------- form controls ---------- */
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-dim); margin-bottom: 7px; }
+  label .opt { color: var(--ink-faint); font-weight: 500; }
+
+  input[type="text"], select, textarea {
+    width: 100%; background: rgba(0,0,0,.35); border: 1px solid var(--line); border-radius: var(--r-sm);
+    color: var(--ink); font-family: var(--sans); font-size: 13.5px; padding: 10px 12px; outline: none;
+    transition: border-color .18s, box-shadow .18s;
+  }
+  input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--acc1); box-shadow: 0 0 0 3px rgba(139,124,255,.15); }
+  select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239a97a3' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+  select option { background: #14141b; }
+  textarea { resize: vertical; min-height: 120px; line-height: 1.6; font-size: 14px; }
+  textarea::placeholder, input::placeholder { color: var(--ink-faint); }
+
+  .hint { font-size: 11.5px; color: var(--ink-faint); margin-top: 7px; line-height: 1.5; }
+  .hint code { font-family: var(--mono); font-size: 10.5px; color: var(--acc2); background: rgba(79,214,200,.08); padding: 1px 5px; border-radius: 4px; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  /* ---------- model info ---------- */
+  .model-info {
+    margin-top: 10px; padding: 10px 13px; border-radius: var(--r-sm); font-size: 12px; line-height: 1.55;
+    background: rgba(139,124,255,.07); border: 1px solid rgba(139,124,255,.18); color: var(--ink-dim);
+  }
+  .model-info b { color: var(--ink); font-weight: 600; }
+  .model-info .price { font-family: var(--mono); color: var(--acc2); }
+
+  /* ---------- segmented / chips ---------- */
+  .seg { display: flex; gap: 6px; background: rgba(0,0,0,.35); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 4px; }
+  .seg button {
+    flex: 1; background: transparent; border: none; color: var(--ink-dim); font-family: var(--mono); font-size: 12px;
+    padding: 7px 0; border-radius: 6px; cursor: pointer; transition: all .18s; font-weight: 500;
+  }
+  .seg button:hover { color: var(--ink); }
+  .seg button.active { background: var(--card-strong); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line), 0 2px 8px rgba(0,0,0,.3); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips button {
+    background: rgba(0,0,0,.3); border: 1px solid var(--line); color: var(--ink-dim); font-family: var(--mono); font-size: 12px;
+    padding: 6px 13px; border-radius: 99px; cursor: pointer; transition: all .18s;
+  }
+  .chips button:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-faint); transform: translateY(-1px); }
+  .chips button.active { background: rgba(139,124,255,.15); border-color: var(--acc1); color: #cfc8ff; }
+  .chips button:disabled { opacity: .3; cursor: not-allowed; text-decoration: line-through; }
+
+  .aspect-row { display: flex; align-items: center; gap: 14px; }
+  .aspect-row .seg { flex: 1; }
+  .frame-preview {
+    width: 74px; border: 1.5px solid var(--acc1); border-radius: 5px; aspect-ratio: 16/9;
+    background: linear-gradient(135deg, rgba(139,124,255,.15), rgba(79,214,200,.12));
+    transition: aspect-ratio .25s ease; flex-shrink: 0;
+    box-shadow: 0 0 14px rgba(139,124,255,.15);
+  }
+
+  /* ---------- presets ---------- */
+  .presets { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+  .presets button {
+    background: rgba(79,214,200,.07); border: 1px solid rgba(79,214,200,.2); color: #9be8df; font-size: 12px; font-weight: 500;
+    padding: 6px 13px; border-radius: 99px; cursor: pointer; transition: all .18s;
+  }
+  .presets button:hover { background: rgba(79,214,200,.14); transform: translateY(-1px); }
+
+  /* ---------- prompt meta bar ---------- */
+  .prompt-meta { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+  .word-count { font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); transition: color .2s; }
+  .word-count.ok { color: var(--acc2); }
+  .word-count.warn { color: var(--warn); }
+  .word-bar { flex: 1; height: 3px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; }
+  .word-bar i { display: block; height: 100%; width: 0; background: var(--acc-grad); border-radius: 99px; transition: width .25s ease, background .25s; }
+  .word-bar i.warn { background: var(--warn); }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    font-family: var(--sans); font-weight: 600; font-size: 13.5px; border: none; border-radius: var(--r-sm);
+    padding: 11px 18px; cursor: pointer; transition: all .18s; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-primary {
+    background: var(--acc-grad); color: #0b0b10; width: 100%; padding: 13px; font-size: 14.5px; border-radius: var(--r-md);
+    box-shadow: 0 6px 24px rgba(139,124,255,.35);
+  }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 32px rgba(139,124,255,.5); }
+  .btn-primary:active:not(:disabled) { transform: translateY(0); }
+  .btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--ink-dim); }
+  .btn-ghost:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-faint); background: var(--card-strong); }
+  .btn-sm { padding: 7px 13px; font-size: 12.5px; border-radius: 8px; }
+  .btn-magic { background: rgba(139,124,255,.12); border: 1px solid rgba(139,124,255,.3); color: #cfc8ff; }
+  .btn-magic:hover:not(:disabled) { background: rgba(139,124,255,.2); }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+  .btn-row .btn { flex: 1; }
+
+  kbd {
+    font-family: var(--mono); font-size: 10px; color: var(--ink-faint); border: 1px solid var(--line);
+    border-bottom-width: 2px; border-radius: 5px; padding: 2px 6px; background: rgba(0,0,0,.3);
+  }
+
+  /* ---------- dropzone ---------- */
+  .dropzone {
+    border: 1.5px dashed var(--line); border-radius: var(--r-sm); padding: 16px; text-align: center;
+    color: var(--ink-faint); font-size: 12.5px; cursor: pointer; transition: all .2s; background: rgba(0,0,0,.2);
+  }
+  .dropzone:hover, .dropzone.over { border-color: var(--acc1); color: var(--ink-dim); background: rgba(139,124,255,.05); }
+  .dropzone b { color: var(--ink-dim); font-weight: 600; }
+  .ref-preview { display: none; margin-top: 10px; align-items: center; gap: 12px; }
+  .ref-preview img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+
+  /* ---------- builder details ---------- */
+  details.builder { margin-top: 14px; border-top: 1px solid var(--line-soft); padding-top: 14px; }
+  details.builder summary {
+    cursor: pointer; list-style: none; font-size: 12.5px; font-weight: 600; color: var(--acc2);
+    display: flex; align-items: center; gap: 7px; user-select: none;
+  }
+  details.builder summary::-webkit-details-marker { display: none; }
+  details.builder summary::after { content: '▸'; transition: transform .2s; font-size: 10px; }
+  details.builder[open] summary::after { transform: rotate(90deg); }
+  details.builder .inner { padding-top: 16px; }
+
+  /* ---------- checklist ---------- */
+  .checklist { display: flex; flex-direction: column; gap: 7px; margin-top: 14px; }
+  .checklist div { display: flex; gap: 9px; font-size: 12px; color: var(--ink-faint); align-items: baseline; }
+  .checklist div::before { content: '✓'; color: var(--acc2); font-weight: 700; flex-shrink: 0; }
+
+  /* ---------- jobs ---------- */
+  .jobs-head { display: flex; align-items: baseline; justify-content: space-between; margin: 40px 0 16px; }
+  .jobs-head h2 { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  .jobs-head span { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); }
+  .jobs-head button { background: none; border: none; color: var(--ink-faint); font-size: 12px; cursor: pointer; font-family: var(--sans); }
+  .jobs-head button:hover { color: var(--bad); }
+
+  .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+
+  .job {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px;
+    backdrop-filter: blur(14px); animation: jobIn .45s cubic-bezier(.2,.9,.3,1.2) both;
+    transition: transform .2s, border-color .2s, box-shadow .2s;
+  }
+  .job:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.16); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+  @keyframes jobIn { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+
+  .job-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .job-prompt { font-size: 13px; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .job-model { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); margin-top: 5px; }
+  .job-cost { font-family: var(--mono); font-size: 12px; color: var(--acc2); white-space: nowrap; }
+
+  .status-row { display: flex; align-items: center; gap: 9px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-faint); flex-shrink: 0; }
+  .dot.pending, .dot.in_progress { background: var(--warn); box-shadow: 0 0 8px var(--warn); animation: pulse 1.4s infinite; }
+  .dot.completed { background: var(--good); box-shadow: 0 0 8px rgba(95,206,138,.5); }
+  .dot.failed, .dot.cancelled, .dot.expired { background: var(--bad); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  .status-text { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); }
+  .elapsed { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin-left: auto; }
+
+  .skeleton {
+    margin-top: 13px; height: 120px; border-radius: 10px;
+    background: linear-gradient(100deg, rgba(255,255,255,.04) 40%, rgba(255,255,255,.1) 50%, rgba(255,255,255,.04) 60%);
+    background-size: 200% 100%; animation: shimmer 1.6s infinite linear;
+  }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+  video { width: 100%; border-radius: 10px; margin-top: 13px; display: block; background: #000; border: 1px solid var(--line-soft); }
+  .job-actions { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
+  .error-msg { font-size: 12px; color: var(--bad); margin-top: 10px; font-family: var(--mono); line-height: 1.5; }
+
+  .empty {
+    grid-column: 1 / -1; color: var(--ink-faint); font-size: 13px; text-align: center; padding: 48px 20px;
+    border: 1.5px dashed var(--line); border-radius: var(--r-lg); font-family: var(--mono);
+  }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line-soft); font-size: 11.5px; color: var(--ink-faint); line-height: 1.7; }
+  footer b { color: var(--ink-dim); }
+</style>
+</head>
+<body>
+
+<div class="aurora"></div>
+<div class="grid-lines"></div>
+
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-dot">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M8 5.5v13l11-6.5-11-6.5z" fill="#0b0b10"/></svg>
+      </div>
+      REEL
+    </div>
+    <div class="key-wrap">
+      <span class="key-tag">never leaves this tab</span>
+      <input type="password" id="apiKey" placeholder="sk-or-v1-…  OpenRouter key" autocomplete="off" spellcheck="false">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="keyStatus" style="font-family:var(--mono);font-size:11px;white-space:nowrap;"></span>
+    </div>
+  </div>
+
+  <header>
+    <div class="eyebrow">OpenRouter Video Studio</div>
+    <h1>Your key. Your renders. Zero middlemen.</h1>
+    <p>Submits to OpenRouter's unified video API, polls until each job finishes, and plays the result inline. <b>Your key stays in this tab</b> and clears on reload — nothing is logged or stored anywhere else. Use Chrome; Firefox sometimes blocks the first cross-origin call.</p>
+  </header>
+
+  <div class="studio">
+
+    <!-- ── left column: model & output ── -->
+    <div class="left-col">
+      <div class="card">
+        <div class="card-title">Model &amp; Output</div>
+
+        <div class="field">
+          <label for="model">Model</label>
+          <select id="model">
+            <option value="bytedance/seedance-2.0-mini">Seedance Mini — cheapest, drafts</option>
+            <option value="bytedance/seedance-2.5">Seedance 2.5 — up to 30s native</option>
+            <option value="alibaba/wan-3.0-prime">Wan 3.0 — solid, mid price</option>
+            <option value="minimax/hailuo-3-max">Hailuo 3 Max — good motion</option>
+            <option value="runway/gen-4.5">Runway Gen-4.5</option>
+            <option value="runway/aleph-2">Runway Aleph 2 — cinema-grade</option>
+            <option value="google/veo-3.1" selected>Veo 3.1 — strong all-rounder</option>
+            <option value="openai/sora-2-pro">Sora 2 Pro — best, most expensive</option>
+          </select>
+          <div class="model-info" id="modelInfo"></div>
+        </div>
+
+        <div class="field">
+          <label>Aspect ratio</label>
+          <div class="aspect-row">
+            <div class="seg" id="aspectSeg">
+              <button data-aspect="16:9" class="active">16:9</button>
+              <button data-aspect="9:16">9:16</button>
+              <button data-aspect="1:1">1:1</button>
+              <button data-aspect="4:3">4:3</button>
+            </div>
+            <div class="frame-preview" id="framePreview"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="duration">Duration <span class="opt">— chips capped at native max</span></label>
+          <div class="chips" id="durChips"></div>
+          <input type="text" id="duration" placeholder="custom seconds, e.g. 6" style="margin-top:8px">
+          <div class="hint">Staying within a model's single-generation max is the #1 defense against character drift.</div>
+        </div>
+
+        <div class="field">
+          <label for="resolution">Resolution</label>
+          <select id="resolution">
+            <option value="">Model default</option>
+            <option value="720p">720p — fast, cheap</option>
+            <option value="1080p" selected>1080p — recommended</option>
+            <option value="4K">4K — if the model supports it</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Reference image <span class="opt">— character / style lock</span></label>
+          <label class="dropzone" id="dropzone" for="refImage"><b>Drop an image</b> or click to browse</label>
+          <input type="file" id="refImage" accept="image/*" hidden>
+          <div class="ref-preview" id="refPreviewWrap">
+            <img id="refPreview" alt="reference">
+            <button type="button" class="btn btn-ghost btn-sm" id="refClear">Remove</button>
+          </div>
+          <div class="hint">Sent as <code>input_references</code>. Honored by Seedance, Veo and Wan — verify via <code>/api/v1/videos/models</code>. For a character across clips, reuse the <b>same</b> reference every generation; models don't remember prior outputs.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Quality Checklist</div>
+        <div class="checklist">
+          <div>One primary action + one camera move per clip — chaining events causes morphing.</div>
+          <div>Aim for 40–120 words; describe what <b>should</b> be there, never what shouldn't.</div>
+          <div>Put the camera move and subject first — models weight early words heavily.</div>
+          <div>Reuse the same reference image + locked traits for every clip of a character.</div>
+          <div>Light with cheap models, finalize with Veo / Sora / Aleph.</div>
+          <div>Action reading slow? Cut to 4–6s, use words like <b>rapid / explosive / snap</b>, and choreograph one countable exchange per clip.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── right column: prompt studio ── -->
+    <div class="card">
+      <div class="card-title">Prompt Studio</div>
+
+      <div class="presets" id="presets"></div>
+
+      <div class="field">
+        <label for="prompt">Prompt</label>
+        <textarea id="prompt" placeholder="A slow cinematic push-in on a copper-plated robot walking past a rain-streaked coffee shop window, late night…"></textarea>
+        <div class="prompt-meta">
+          <span class="word-count" id="wordCount">0 words</span>
+          <div class="word-bar"><i id="wordBar"></i></div>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--ink-faint)">40–120</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-magic" id="enhanceBtn">✨ Enhance with AI</button>
+        <button class="btn btn-ghost" id="deslopBtn">🧹 De-slop</button>
+        <button class="btn btn-ghost" id="surpriseBtn">🎲 Surprise me</button>
+      </div>
+      <div class="hint">Enhance expands a rough idea into a camera-literate cinematic prompt, already filtered for AI-slop phrasing. De-slop cleans up existing text — your prompt, or anything pasted in — without rewriting it into generic AI voice.</div>
+      <div class="hint" id="deslopNote" style="display:none"></div>
+
+      <details class="builder">
+        <summary>Build from structured fields</summary>
+        <div class="inner">
+          <div class="field">
+            <label for="camMove">Shot type + camera move</label>
+            <select id="camMove">
+              <option value="">— pick a starter, or type your own below —</option>
+              <option>Slow cinematic push-in</option>
+              <option>Static wide establishing shot</option>
+              <option>Handheld follow, hip height</option>
+              <option>Orbiting camera, slow arc</option>
+              <option>Tracking shot, low angle</option>
+              <option>Slow pull-back reveal</option>
+              <option>Slow-motion macro, shallow depth of field</option>
+              <option>Aerial drone descent</option>
+            </select>
+            <input type="text" id="camMoveCustom" placeholder="Or type your own shot/camera move" style="margin-top:8px">
+          </div>
+
+          <div class="field">
+            <div class="row">
+              <div>
+                <label for="subjectAction">Subject + precise action</label>
+                <input type="text" id="subjectAction" placeholder="copper robot walking slowly left-to-right">
+              </div>
+              <div>
+                <label for="environment">Environment / setting</label>
+                <input type="text" id="environment" placeholder="rain-streaked coffee shop window, late night">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="emotionalIntent">Emotional intent / stakes <span class="opt">(what they feel, not just what they do)</span></label>
+            <input type="text" id="emotionalIntent" placeholder="years of hatred boiling over — he's not fighting to win, he's fighting to make him pay">
+            <div class="hint">The layer models skip by default: eyes, breath, hesitation vs. commitment, who's desperate vs. who's in control.</div>
+          </div>
+
+          <div class="field">
+            <div class="row">
+              <div>
+                <label for="lighting">Lighting + atmosphere</label>
+                <input type="text" id="lighting" placeholder="soft amber light, reflections rippling">
+              </div>
+              <div>
+                <label for="styleLook">Style / technical look</label>
+                <input type="text" id="styleLook" placeholder="anamorphic flares, 24fps film grain">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="row">
+              <div>
+                <label for="motionDetails">Motion / physics</label>
+                <input type="text" id="motionDetails" placeholder="cloth billowing, weight settling into steps">
+              </div>
+              <div>
+                <label for="audioCues">Audio cues <span class="opt">(Veo)</span></label>
+                <input type="text" id="audioCues" placeholder="rain tapping glass, distant traffic hum">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="row">
+              <div>
+                <label for="subjectName">Character name</label>
+                <input type="text" id="subjectName" placeholder="e.g. Rook">
+              </div>
+              <div>
+                <label for="lockedTraits">Locked traits</label>
+                <input type="text" id="lockedTraits" placeholder="copper plating, single blue optic, no logos">
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-ghost" id="buildPromptBtn" type="button" style="width:100%">Assemble prompt</button>
+        </div>
+      </details>
+
+      <div style="margin-top:18px">
+        <button class="btn btn-primary" id="submitBtn">Generate video</button>
+        <div class="hint" style="text-align:center"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> from the prompt box also submits</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="jobs-head">
+    <h2>Renders</h2>
+    <span id="jobsCount"></span>
+    <button id="clearDone" style="display:none">clear finished</button>
+  </div>
+  <div class="jobs-grid" id="jobs">
+    <div class="empty" id="emptyState">No renders yet — jobs appear here and update live.</div>
+  </div>
+
+  <footer>
+    <b>Privacy:</b> your key is used only for direct calls from this page to openrouter.ai and is cleared on reload.
+    Prompts and builder fields are remembered locally in your browser so you can pick up where you left off — the key is not.
+    <b>Tip:</b> live per-second prices are fetched from your account's model list when you enter a key.
+  </footer>
+
+</div>
+
+<script>
+const API_BASE = 'https://openrouter.ai/api/v1/videos';
+const CHAT_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const jobs = new Map();
+let jobCounter = 0;
+let currentAspect = '16:9';
+let refImageDataUrl = null;
+const priceCache = {};
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const getKey = () => $('apiKey').value.replace(/[^\x20-\x7E]/g, '').trim();
+function refreshKeyStatus() {
+  const el = $('keyStatus');
+  const raw = $('apiKey').value;
+  if (!raw) { el.textContent = ''; return; }
+  const k = getKey();
+  const masked = k.length > 16 ? k.slice(0, 11) + '\u2026' + k.slice(-4) : k;
+  if (/^sk-or-v1-[A-Za-z0-9_-]{20,}$/.test(k)) {
+    el.textContent = '\u25CF key ok: ' + masked;
+    el.style.color = 'var(--good)';
+  } else if (k.includes(' ')) {
+    el.textContent = '\u25CF key contains a space \u2014 re-copy it';
+    el.style.color = 'var(--bad)';
+  } else {
+    el.textContent = '\u25CF doesn\u2019t look like sk-or-v1-\u2026: ' + (masked || '(empty after cleanup)');
+    el.style.color = 'var(--warn)';
+  }
+}
+
+const MODEL_INFO = {
+  'bytedance/seedance-2.0-mini': { max: 15, blurb: 'Cheapest — perfect for motion tests and drafts.' },
+  'bytedance/seedance-2.5':      { max: 30, blurb: 'Up to 30s native — long takes without stitching.' },
+  'alibaba/wan-3.0-prime':       { max: 8,  blurb: 'Solid quality-to-price balance.' },
+  'minimax/hailuo-3-max':        { max: 10, blurb: 'Strong, natural-feeling motion.' },
+  'runway/gen-4.5':              { max: 10, blurb: 'The model behind Runway\u2019s own app.' },
+  'runway/aleph-2':              { max: 10, blurb: 'Cinema-grade lighting and texture.' },
+  'google/veo-3.1':              { max: 8,  blurb: 'Strong all-rounder with native audio cues.' },
+  'openai/sora-2-pro':           { max: 12, blurb: 'Top quality — reserve it for finals.' },
+};
+const DURATIONS = [4, 5, 6, 8, 10, 12, 15, 20, 30];
+
+const PRESETS = [
+  { name: '\u{1F94A} High-intensity fight', duration: 5,
+    camMove: 'Handheld close-up, fast whip pans following the action',
+    subjectAction: 'two fighters trading explosive punches in a cramped bar — a jab, a slipped counter, and a hard right cross that sends the other crashing into a table',
+    emotion: 'years of hatred boiling over — one fights wild and reckless, overcommitting on a haymaker; the other is cold and controlled, eyes locked on him even mid-fall',
+    environment: 'dim neon-lit bar, bottles and glasses on tables',
+    lighting: 'harsh practicals, neon glow cutting through smoke, deep shadows',
+    styleLook: 'gritty action-film look, handheld shake, high shutter speed clarity',
+    motion: 'fast and violent — fists blur with speed, a glass shatters on impact, table legs scraping the floor',
+    audio: 'sharp impact thuds, glass shattering, crowd shouting' },
+  { name: '\u2694\uFE0F Katana duel', duration: 5,
+    camMove: 'Camera orbiting the duelists at combat speed',
+    subjectAction: 'two samurai exchanging three rapid sword strikes, blades sparking on each contact, one dropping into a low finishing slash',
+    emotion: 'a duel of mutual respect turned mortal — both calm and silent, no wasted rage, just absolute focus and the quiet certainty that only one walks away',
+    environment: 'bamboo forest clearing at dusk',
+    lighting: 'low amber sun flaring through the bamboo, dust kicked up in the air',
+    styleLook: 'wuxia action look, fast blade trails, crisp metallic impacts',
+    motion: 'blades clanging in quick succession, fabric snapping with each step, leaves scattering in their wake',
+    audio: 'ringing steel, fast footfalls, sharp breaths' },
+  { name: '\u{1F3AF} Gunfight cover', duration: 5,
+    camMove: 'Handheld follow at shoulder height, urgent and close',
+    subjectAction: 'an agent diving behind a concrete pillar as bullets spark off its edge, then returning fire in rapid double-taps',
+    emotion: 'raw adrenaline and controlled fear — ragged breathing, a flash of panic when the cover nearly fails, then a hardening resolve before leaning out to fire',
+    environment: 'underground parking garage, parked cars for cover',
+    lighting: 'flickering fluorescent tubes, muzzle flashes strobing the frame',
+    styleLook: 'modern thriller look, high contrast, slight slow-motion on the dive',
+    motion: 'shell casings ejecting in arcs, concrete dust bursting with each impact',
+    audio: 'deafening echoing gunshots, shell casings pinging on concrete' },
+  { name: '\u{1F3C3} Rooftop parkour chase', duration: 6,
+    camMove: 'Sprinting tracking shot, chest height, barely keeping up',
+    subjectAction: 'a runner vaulting a railing, kicking off a wall, and landing into a roll on a rooftop, a pursuer two steps behind',
+    emotion: 'pure desperation — the runner glances back mid-stride with wide, panicked eyes, a near-miss on the landing shaking their confidence for just a beat before pushing on',
+    environment: 'dense city rooftops at sunset, AC units and gaps between buildings',
+    lighting: 'golden hour rim light, long hard shadows',
+    styleLook: 'parkour action look, fast and kinetic, wide-lens energy',
+    motion: 'rapid footfalls, jacket flapping, gravel scattering on the landing',
+    audio: 'heavy breathing, sneakers slapping concrete, distant sirens' },
+  { name: '\u{1F697} Night car drift', duration: 5,
+    camMove: 'Low tracking shot racing alongside the car',
+    subjectAction: 'a muscle car drifting hard around a corner, tires smoking, clipping a parked car and throwing a fan of sparks',
+    emotion: 'reckless exhilaration bordering on out-of-control — a driver committed past the point of caution, chasing the edge of the car\u2019s limits and their own',
+    environment: 'wet downtown street at night, neon storefronts',
+    lighting: 'streetlights and neon streaking past, brake lights glowing red on the wet asphalt',
+    styleLook: 'big-budget action look, aggressive speed, spray and reflection everywhere',
+    motion: 'tires screeching and smoking, water spray, body panels flexing over the curb',
+    audio: 'engine roar, tire screech, grinding metal' },
+  { name: '\u{1F4A5} Explosion walk-away', duration: 6,
+    camMove: 'Static camera, sudden snap-zoom as the blast erupts',
+    subjectAction: 'a fireball erupting behind a walking hero who never breaks stride, debris raining down in slow motion',
+    emotion: 'cold, spent finality — the fight is already over in their mind; no flinch at the blast, just exhausted, unbothered resolve',
+    environment: 'industrial dock at night, fuel drums and chain-link fencing',
+    lighting: 'orange firelight strobing across wet ground, heat shimmer in the air',
+    styleLook: 'blockbuster action look, slow-motion debris, embers drifting',
+    motion: 'a shockwave rippling the hero\u2019s coat, sparks bouncing on concrete, smoke billowing outward',
+    audio: 'deep blast boom, crackling fire, debris clattering down' },
+  { name: '\u{1F3D4}\uFE0F Cliffside sprint', duration: 5,
+    camMove: 'Drone chase shot diving along the trail',
+    subjectAction: 'a trail runner sprinting along a narrow cliff path, leaping a gap between rocks as loose stones fall away',
+    emotion: 'fierce, joyful determination — pushing past fear of the drop for the pure high of the effort, a fleeting grin after sticking the risky leap',
+    environment: 'jagged mountain ridge above a fjord, early morning',
+    lighting: 'cold blue dawn light, thin mist in the valley below',
+    styleLook: 'sports-commercial look, crisp and adrenaline-charged',
+    motion: 'fast rhythmic stride, dust kicking up, stones tumbling down the cliff face',
+    audio: 'wind roaring, gravel skittering, a distant bird cry' },
+];
+
+/* ---------- word count ---------- */
+function updateWordCount() {
+  const words = $('prompt').value.trim().split(/\s+/).filter(Boolean).length;
+  const el = $('wordCount'), bar = $('wordBar');
+  el.textContent = words + (words === 1 ? ' word' : ' words');
+  el.className = 'word-count' + (words >= 40 && words <= 120 ? ' ok' : words > 120 ? ' warn' : '');
+  const pct = Math.min(100, (words / 120) * 100);
+  bar.style.width = pct + '%';
+  bar.className = words > 120 ? 'warn' : '';
+}
+
+/* ---------- presets ---------- */
+function renderPresets() {
+  const wrap = $('presets');
+  PRESETS.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.name;
+    b.addEventListener('click', () => applyPreset(i));
+    wrap.appendChild(b);
+  });
+}
+function applyPreset(i) {
+  const p = PRESETS[i];
+  $('camMove').value = '';
+  $('camMoveCustom').value = p.camMove;
+  $('subjectAction').value = p.subjectAction;
+  $('emotionalIntent').value = p.emotion || '';
+  $('environment').value = p.environment;
+  $('lighting').value = p.lighting;
+  $('styleLook').value = p.styleLook;
+  $('motionDetails').value = p.motion;
+  $('audioCues').value = p.audio;
+  $('subjectName').value = '';
+  $('lockedTraits').value = '';
+  if (p.duration) { $('duration').value = p.duration; updateModelInfo(); }
+  buildPrompt();
+  saveDraft();
+  $('prompt').focus();
+}
+
+/* ---------- enhance ---------- */
+async function enhancePrompt() {
+  const prompt = $('prompt').value.trim();
+  const key = getKey();
+  if (!prompt) { alert('Write even a rough one-line idea first — the enhancer does the rest.'); return; }
+  if (!key) { alert('Add your OpenRouter key first — enhancement runs through the same key (a few cents at most).'); return; }
+  const btn = $('enhanceBtn');
+  btn.disabled = true; btn.textContent = '✨ Enhancing…';
+  try {
+    const res = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: 'You expand short video-generation prompts into vivid, camera-literate cinematic prompts of 60-100 words. Rules: exactly one primary action and one camera move; describe only what SHOULD appear (never use negative wording); include specific lighting, lens/texture detail and one line of physical motion; end with an "Audio:" line of diegetic sound. Critically, every prompt must carry emotional intent, not just choreography — specify what the subject(s) actually feel and why (rage, desperation, cold control, joy, fear, grief) and show it through a concrete physical tell: eyes, breath, a flinch, a hesitation, an asymmetry between participants (one reckless vs. one controlled, one desperate vs. one calm). Never leave a scene emotionally neutral. For any confrontation between two or more subjects: never open on a symmetrical, evenly-spaced, both-fully-visible standoff or establishing pose — that reads as a poster, not a fight. Open already mid-collision, with one subject closer/larger in frame than the other, off-balance, or mid-committed-strike. The camera itself must be imperfect and reactive — handheld drift, a push-in, a whip-pan, or a frame that clips part of a subject at the edge — never a clean, level, static wide shot. Avoid AI-slop phrasing and structure: no binary contrasts ("It\'s not X, it\'s Y"), no colon-reveal drama ("The best part: it learns"), no importance puffery ("marks a pivotal moment," "stands as a testament"), no fake-profound closing lines, no throat-clearing or faux-insight setups ("here\'s the thing," "what nobody tells you"). Use concrete, specific sensory detail instead of abstractions — never generic mood words alone. Return only the prompt text, no preamble.' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({}));
+      throw new Error(b?.error?.message || ('HTTP ' + res.status));
+    }
+    const data = await res.json();
+    const out = data.choices?.[0]?.message?.content?.trim();
+    if (!out) throw new Error('Empty response');
+    $('prompt').value = out.replace(/^["'\u201c]+|["'\u201d]+$/g, '');
+    updateWordCount(); saveDraft();
+  } catch (e) {
+    alert('Enhance failed: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '✨ Enhance with AI';
+  }
+}
+
+/* ---------- de-slop ---------- */
+const DESLOP_SYSTEM = `You are a sharp human editor. Remove AI-slop patterns from the user's text while preserving their point, meaning, and personal voice. Make the minimum effective edit — fix slop, errors, and unclear passages; leave strong lines alone. Don't invent claims, examples, or stats.
+
+Banned words: delve, foster, leverage, utilize, facilitate, empower, streamline, robust, cutting-edge, paradigm shift, game changer, tapestry, realm, beacon, multifaceted, meticulous, intricate, paramount, transformative, elevate, embark, supercharge, harness, ever-evolving.
+
+Cut these patterns: binary contrasts ("It's not X, it's Y"); throat-clearing openers ("Here's the thing," "Let me be clear"); faux-insight setups ("What nobody tells you," "What most people get wrong"); colon-reveal drama ("The best part: it learns"); superficial -ing clauses ("highlighting," "underscoring," "showcasing"); importance puffery ("marks a pivotal moment," "stands as a testament," "plays a vital role"); interpretive metadiscourse ("This distinction matters," "As you can see"); weasel attribution ("experts agree," "studies show") — name the source or cut the claim; synonym cycling (rotating words for style instead of repeating the clear one); negative listing ("Not a X. Not a Y. A Z."); dramatic fragmentation ("That's it. That's the whole thing."); rhetorical setups ("What if I told you," "Plot twist:"); fake-profound kickers (cute mic-drop closing lines); summary-recap endings ("In conclusion," "Ultimately," restating the piece); formatting slop (emoji in headings, bullets where prose reads better); clustered or decorative em dashes.
+
+Also fix the fundamentals: lead with the point when the setup adds nothing, use active voice, untangle hard-to-follow sentences, replace abstractions with concrete specifics (names, numbers, mechanisms), and make verbs do the work ("has the ability to" becomes "can").
+
+Return the edited text, then a line containing only ---CHANGES---, then a short bullet list (3-6 items max, each under 12 words) of what you changed. If nothing needed fixing, say so in the changes list and return the text unchanged.`;
+
+async function deslopPrompt() {
+  const text = $('prompt').value.trim();
+  const key = getKey();
+  const note = $('deslopNote');
+  if (!text) { alert('Nothing to de-slop yet — write or paste some text into the prompt box first.'); return; }
+  if (!key) { alert('Add your OpenRouter key first — de-slop runs through the same key (a few cents at most).'); return; }
+  const btn = $('deslopBtn');
+  btn.disabled = true; btn.textContent = '🧹 Cleaning…';
+  note.style.display = 'none';
+  try {
+    const res = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: DESLOP_SYSTEM },
+          { role: 'user', content: text }
+        ]
+      })
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({}));
+      throw new Error(b?.error?.message || ('HTTP ' + res.status));
+    }
+    const data = await res.json();
+    const out = data.choices?.[0]?.message?.content?.trim();
+    if (!out) throw new Error('Empty response');
+    const [editedRaw, changesRaw] = out.split(/---CHANGES---/i);
+    const edited = (editedRaw || out).trim().replace(/^["'\u201c]+|["'\u201d]+$/g, '');
+    $('prompt').value = edited;
+    updateWordCount(); saveDraft();
+    if (changesRaw && changesRaw.trim()) {
+      note.textContent = 'What changed: ' + changesRaw.trim().replace(/\s*\n+\s*/g, ' · ').replace(/^[-•*]\s*/, '').replace(/\s*[-•*]\s*/g, ' · ');
+      note.style.display = '';
+    }
+  } catch (e) {
+    alert('De-slop failed: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '🧹 De-slop';
+  }
+}
+
+/* ---------- model info / prices ---------- */
+function updateModelInfo() {
+  const id = $('model').value;
+  const info = MODEL_INFO[id] || { max: 10, blurb: '' };
+  const price = priceCache[id];
+  const priceStr = price != null
+    ? `<span class="price">~$${price.toFixed(2)}/sec</span> live from your account`
+    : `enter your key to see live pricing`;
+  $('modelInfo').innerHTML = `<b>${id.split('/')[1]}</b> — native up to <b>${info.max}s</b>. ${info.blurb}<br>${priceStr}`;
+  renderDurChips(info.max);
+}
+
+async function fetchPrices() {
+  const key = getKey();
+  if (!key) return;
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/models', { headers: { 'Authorization': 'Bearer ' + key } });
+    if (!res.ok) return;
+    const data = await res.json();
+    (data.data || []).forEach(m => {
+      if (m.id in MODEL_INFO) {
+        const c = parseFloat(m.pricing?.completion);
+        if (!isNaN(c)) priceCache[m.id] = c;
+      }
+    });
+    updateModelInfo();
+  } catch (_) { /* offline — leave blank */ }
+}
+
+/* ---------- duration chips ---------- */
+function renderDurChips(max) {
+  const wrap = $('durChips');
+  wrap.innerHTML = '';
+  DURATIONS.forEach(d => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = d + 's';
+    if (d > max) { b.disabled = true; b.title = 'Exceeds this model\u2019s native max — extensions drift'; }
+    if ($('duration').value && Number($('duration').value) === d) b.classList.add('active');
+    b.addEventListener('click', () => {
+      $('duration').value = d;
+      wrap.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      saveDraft();
+    });
+    wrap.appendChild(b);
+  });
+}
+
+/* ---------- aspect ---------- */
+$('aspectSeg').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  $('aspectSeg').querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentAspect = btn.dataset.aspect;
+  const [w, h] = currentAspect.split(':').map(Number);
+  $('framePreview').style.aspectRatio = w + '/' + h;
+  saveDraft();
+});
+
+/* ---------- dropzone ---------- */
+const dz = $('dropzone'), fileInput = $('refImage');
+dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', (e) => {
+  e.preventDefault(); dz.classList.remove('over');
+  if (e.dataTransfer.files?.[0]) loadRefFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files?.[0]) loadRefFile(fileInput.files[0]); });
+
+function loadRefFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    refImageDataUrl = reader.result;
+    $('refPreview').src = refImageDataUrl;
+    $('refPreviewWrap').style.display = 'flex';
+  };
+  reader.readAsDataURL(file);
+}
+$('refClear').addEventListener('click', () => {
+  refImageDataUrl = null; fileInput.value = '';
+  $('refPreviewWrap').style.display = 'none'; $('refPreview').src = '';
+});
+
+/* ---------- build prompt from fields ---------- */
+function buildPrompt() {
+  const camMove = $('camMoveCustom').value.trim() || $('camMove').value;
+  const parts = [];
+  const opener = [camMove, $('subjectAction').value.trim()].filter(Boolean).join(', ');
+  if (opener) parts.push(opener);
+  const envLine = $('environment').value.trim();
+  if (envLine) parts.push('in ' + envLine);
+  let sentence = parts.join(' ');
+  if (sentence) sentence += '.';
+  const sentences = sentence ? [sentence] : [];
+  const emotion = $('emotionalIntent').value.trim();
+  if (emotion) sentences.push(emotion.replace(/\.$/, '') + '.');
+  [['lighting'], ['styleLook'], ['motionDetails']].forEach(([id]) => {
+    const v = $(id).value.trim();
+    if (v) sentences.push(v.replace(/\.$/, '') + '.');
+  });
+  const audio = $('audioCues').value.trim();
+  if (audio) sentences.push('Audio: ' + audio.replace(/\.$/, '') + '.');
+  const name = $('subjectName').value.trim();
+  const traits = $('lockedTraits').value.trim();
+  if (name || traits) sentences.push('[Consistency: ' + [name, traits].filter(Boolean).join(', ') + ']');
+  const built = sentences.join(' ').trim();
+  if (built) { $('prompt').value = built; updateWordCount(); saveDraft(); }
+}
+
+/* ---------- draft persistence (never the key) ---------- */
+const DRAFT_FIELDS = ['prompt','camMove','camMoveCustom','subjectAction','emotionalIntent','environment','lighting','styleLook','motionDetails','audioCues','subjectName','lockedTraits','duration','resolution','model'];
+function saveDraft() {
+  const d = {};
+  DRAFT_FIELDS.forEach(id => d[id] = $(id).value);
+  d.aspect = currentAspect;
+  try { localStorage.setItem('reel-draft-v2', JSON.stringify(d)); } catch (_) {}
+}
+function loadDraft() {
+  let d;
+  try { d = JSON.parse(localStorage.getItem('reel-draft-v2') || 'null'); } catch (_) { d = null; }
+  if (!d) return;
+  DRAFT_FIELDS.forEach(id => { if (d[id] != null) $(id).value = d[id]; });
+  if (d.aspect) {
+    const btn = document.querySelector(`#aspectSeg button[data-aspect="${d.aspect}"]`);
+    if (btn) btn.click();
+  }
+  updateWordCount();
+}
+DRAFT_FIELDS.forEach(id => $(id).addEventListener('input', saveDraft));
+$('model').addEventListener('change', () => { updateModelInfo(); saveDraft(); });
+
+/* ---------- jobs ---------- */
+function statusLabel(s) {
+  return ({ pending: 'queued', in_progress: 'rendering', completed: 'done', failed: 'failed', cancelled: 'cancelled', expired: 'expired' })[s] || s;
+}
+function fmtElapsed(ms) {
+  const s = Math.floor(ms / 1000);
+  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+
+function renderJob(jobId) {
+  const j = jobs.get(jobId);
+  if (!j) return;
+  $('emptyState').style.display = 'none';
+  $('jobsCount').textContent = jobs.size + (jobs.size === 1 ? ' job' : ' jobs');
+  $('clearDone').style.display = 'inline';
+
+  let el = document.getElementById('job-' + jobId);
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'job';
+    el.id = 'job-' + jobId;
+    $('jobs').prepend(el);
+  }
+
+  const active = j.status === 'pending' || j.status === 'in_progress';
+  const costStr = j.cost != null ? '$' + Number(j.cost).toFixed(3) : '';
+
+  let media = '';
+  if (j.status === 'completed' && j.videoUrl) {
+    media = `<video controls src="${j.videoUrl}"></video>`;
+  } else if (active) {
+    media = `<div class="skeleton"></div>`;
+  }
+
+  let actions = '<div class="job-actions">';
+  if (j.status === 'completed' && j.videoUrl) {
+    actions += `<a href="${j.videoUrl}" download="reel-${jobId}.mp4"><button class="btn btn-ghost btn-sm">⬇ Download</button></a>`;
+  }
+  actions += `<button class="btn btn-ghost btn-sm" onclick="jobAction('copy', ${jobId})">Copy prompt</button>`;
+  actions += `<button class="btn btn-ghost btn-sm" onclick="jobAction('reuse', ${jobId})">Use again</button>`;
+  if (j.status === 'failed') actions += `<button class="btn btn-ghost btn-sm" onclick="jobAction('retry', ${jobId})">↻ Retry</button>`;
+  actions += '</div>';
+
+  let errorHtml = j.error ? `<div class="error-msg">${esc(j.error)}</div>` : '';
+
+  el.innerHTML = `
+    <div class="job-top">
+      <div>
+        <div class="job-prompt">${esc(j.prompt)}</div>
+        <div class="job-model">${esc(j.model)}</div>
+      </div>
+      <div class="job-cost">${costStr}</div>
+    </div>
+    <div class="status-row">
+      <div class="dot ${j.status}"></div>
+      <span class="status-text">${statusLabel(j.status)}</span>
+      <span class="elapsed" data-start="${j.startedAt}"></span>
+    </div>
+    ${errorHtml}
+    ${media}
+    ${actions}
+  `;
+}
+
+window.jobAction = function (act, id) {
+  const j = jobs.get(id);
+  if (!j) return;
+  if (act === 'copy') {
+    navigator.clipboard?.writeText(j.prompt).then(() => {}, () => {});
+  } else if (act === 'reuse') {
+    $('prompt').value = j.prompt;
+    $('model').value = j.model;
+    if (j.duration) $('duration').value = j.duration;
+    if (j.resolution) $('resolution').value = j.resolution;
+    updateModelInfo(); updateWordCount(); saveDraft();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    $('prompt').focus();
+  } else if (act === 'retry') {
+    $('prompt').value = j.prompt;
+    $('model').value = j.model;
+    updateModelInfo();
+    submitJob();
+  }
+};
+
+$('clearDone').addEventListener('click', () => {
+  jobs.forEach((j, id) => {
+    if (!['pending', 'in_progress'].includes(j.status)) {
+      document.getElementById('job-' + id)?.remove();
+      jobs.delete(id);
+    }
+  });
+  if (!jobs.size) {
+    $('emptyState').style.display = '';
+    $('jobsCount').textContent = '';
+    $('clearDone').style.display = 'none';
+  } else {
+    $('jobsCount').textContent = jobs.size + ' job' + (jobs.size === 1 ? '' : 's');
+  }
+});
+
+/* global tick for elapsed timers */
+setInterval(() => {
+  const now = Date.now();
+  document.querySelectorAll('.elapsed[data-start]').forEach(el => {
+    const card = el.closest('.job');
+    const dot = card?.querySelector('.dot');
+    if (dot && (dot.classList.contains('pending') || dot.classList.contains('in_progress'))) {
+      el.textContent = fmtElapsed(now - Number(el.dataset.start));
+    }
+  });
+}, 1000);
+
+async function pollJob(jobId, apiKey) {
+  const j = jobs.get(jobId);
+  if (!j) return;
+  try {
+    const res = await fetch(`${API_BASE}/${j.remoteId}`, { headers: { 'Authorization': 'Bearer ' + apiKey } });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body?.error?.message || ('HTTP ' + res.status));
+    }
+    const data = await res.json();
+    j.status = data.status;
+    j.cost = data.usage?.cost;
+    if (data.status === 'completed') {
+      j.videoUrl = (data.unsigned_urls || [])[0] || null;
+      renderJob(jobId);
+      return;
+    }
+    if (['failed', 'cancelled', 'expired'].includes(data.status)) {
+      j.error = (data.error?.message) || ('Job ' + data.status);
+      renderJob(jobId);
+      return;
+    }
+    renderJob(jobId);
+    setTimeout(() => pollJob(jobId, apiKey), 4000);
+  } catch (err) {
+    j.status = 'failed';
+    j.error = 'Poll error: ' + err.message;
+    renderJob(jobId);
+  }
+}
+
+async function submitJob() {
+  const apiKey = getKey();
+  const model = $('model').value;
+  const prompt = $('prompt').value.trim();
+  const duration = $('duration').value.trim();
+  const resolution = $('resolution').value.trim();
+
+  if (!apiKey) { alert('Enter your OpenRouter API key (top of the page).'); return; }
+  if (!/^sk-or-v1-[A-Za-z0-9_-]{20,}$/.test(apiKey)) {
+    alert('The key field doesn\u2019t contain a valid OpenRouter key.\nThe page reads: \u201C' + (apiKey ? apiKey.slice(0, 14) + '\u2026' : 'EMPTY') + '\u201D\n\nRe-copy it from openrouter.ai/keys \u2014 the field clears on every page reload.');
+    return;
+  }
+  if (!model) { alert('Choose a model.'); return; }
+  if (!prompt) { alert('Write a prompt first.'); return; }
+
+  const body = { model, prompt };
+  if (duration) body.duration = isNaN(Number(duration)) ? duration : Number(duration);
+  if (resolution) body.resolution = resolution;
+  if (currentAspect) body.aspect_ratio = currentAspect;
+  if (refImageDataUrl) body.input_references = [{ type: 'image_url', image_url: { url: refImageDataUrl } }];
+
+  const btn = $('submitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+
+  const localId = ++jobCounter;
+  jobs.set(localId, { model, prompt, status: 'pending', remoteId: null, startedAt: Date.now(), duration, resolution });
+  renderJob(localId);
+
+  try {
+    const res = await fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody?.error?.message || ('HTTP ' + res.status));
+    }
+    const data = await res.json();
+    const j = jobs.get(localId);
+    j.remoteId = data.id;
+    j.status = data.status || 'pending';
+    renderJob(localId);
+    pollJob(localId, apiKey);
+  } catch (err) {
+    const j = jobs.get(localId);
+    j.status = 'failed';
+    j.error = err.message.includes('Failed to fetch')
+      ? 'Request blocked — your browser refused the cross-origin call (see the note in the footer).'
+      : err.message;
+    renderJob(localId);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Generate video';
+  }
+}
+
+/* ---------- wiring ---------- */
+$('submitBtn').addEventListener('click', submitJob);
+$('buildPromptBtn').addEventListener('click', buildPrompt);
+$('enhanceBtn').addEventListener('click', enhancePrompt);
+$('deslopBtn').addEventListener('click', deslopPrompt);
+$('surpriseBtn').addEventListener('click', () => applyPreset(Math.floor(Math.random() * PRESETS.length)));
+$('prompt').addEventListener('input', updateWordCount);
+$('prompt').addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); submitJob(); }
+});
+let priceTimer;
+$('apiKey').addEventListener('input', () => {
+  const el = $('apiKey');
+  const clean = el.value.replace(/[^\x20-\x7E]/g, '');
+  if (clean !== el.value) { el.value = clean; flashKeyNote('Non-ASCII characters were stripped from your key (a common copy-paste artifact).'); }
+
+  refreshKeyStatus();
+  clearTimeout(priceTimer);
+  priceTimer = setTimeout(fetchPrices, 600);
+});
+
+function flashKeyNote(msg) {
+  let n = $('keyNote');
+  if (!n) {
+    n = document.createElement('div');
+    n.id = 'keyNote';
+    n.style.cssText = 'font-size:11px;color:var(--warn);margin-top:6px;text-align:right;max-width:460px;margin-left:auto;';
+    document.querySelector('.key-wrap').after(n);
+  }
+  n.textContent = msg;
+  clearTimeout(flashKeyNote._t);
+  flashKeyNote._t = setTimeout(() => { n.remove(); }, 6000);
+}
+
+renderPresets();
+refreshKeyStatus();
+loadDraft();
+updateModelInfo();
+updateWordCount();
+</script>
+</body>
+</html>
